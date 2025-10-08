@@ -1,12 +1,10 @@
-# 💬 Docker Chat App  
+<img width="1919" height="917" alt="Login" src="https://github.com/user-attachments/assets/c96e6f56-fa2d-4881-a8aa-22d4431ee8d3" /># 💬 Docker Chat App  
 **Developed & Modified by _Eng. Muhammad Abdulghaffar_**
 
 > Real-time chat app powered by **Flask**, **Socket.IO**, **MySQL**, and **Nginx** — fully containerized using **Docker Compose**.
 
-![Login Screen](![Uploading Login.png…]()
-)
-![Chat Example](docs/chat1.png)
-![Chat Multiple Users](docs/chat2.png)
+![Uploading Login.png…](Login)
+
 
 ---
 
