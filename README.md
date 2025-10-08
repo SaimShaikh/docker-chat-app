@@ -1,9 +1,13 @@
-<img width="1919" height="917" alt="Login" src="https://github.com/user-attachments/assets/c96e6f56-fa2d-4881-a8aa-22d4431ee8d3" /># 💬 Docker Chat App  
+<img width="1907" height="1013" alt="chat-1" src="https://github.com/user-attachments/assets/2f4ac9a9-e8d1-4015-9751-c90122d843a3" /><img width="1919" height="917" alt="Login" src="https://github.com/user-attachments/assets/c96e6f56-fa2d-4881-a8aa-22d4431ee8d3" /># 💬 Docker Chat App  
 **Developed & Modified by _Eng. Muhammad Abdulghaffar_**
 
 > Real-time chat app powered by **Flask**, **Socket.IO**, **MySQL**, and **Nginx** — fully containerized using **Docker Compose**.
 
 ![Uploading Login.png…](Login)
+![Uploading chat-1.png…](chat-1)
+![Uploading chat-2.png…](chat-2)
+
+
 
 
 ---
