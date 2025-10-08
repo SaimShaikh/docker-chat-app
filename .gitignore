@@ -1,0 +1,14 @@
+# Python
+__pycache__/
+*.pyc
+.env
+
+# SSH keys (ممنوع تترفع)
+id_ed25519
+id_ed25519.pub
+*.pem
+*.key
+
+# Docker
+*.log
+dbdata/
