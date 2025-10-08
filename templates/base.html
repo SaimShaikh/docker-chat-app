@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>{% block title %}My Flask App{% endblock %}</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      background: #f0f8ff;
+    }
+    header {
+      position: fixed;
+      top: 0;
+      width: 100%;
+      background: #0077b6;
+      color: white;
+      padding: 10px 0;
+      text-align: center;
+      font-weight: bold;
+    }
+    footer {
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+      background: #0077b6;
+      color: white;
+      text-align: center;
+      padding: 8px 0;
+    }
+    main {
+      margin-top: 70px;
+      margin-bottom: 50px;
+      text-align: center;
+    }
+    a {
+      color: #0077b6;
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <header>Chat-Net</header>
+
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer>Made By Eng Muhammad Abdulghaffar</footer>
+</body>
+</html>
+

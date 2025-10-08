@@ -1,0 +1,51 @@
+
+services:
+  web:
+    build: .
+    container_name: chat-backend
+    environment:
+      - DB_URI=mysql+pymysql://chatuser:chatpass@db:3306/chatdb
+    depends_on:
+      db:
+        condition: service_healthy        # استنى لحد ما الـ DB تبقى جاهزة
+    networks:
+      - chatnet
+
+  nginx:
+    image: nginx:latest
+    container_name: chat-proxy
+    ports:
+      - "38080:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - web
+    networks:
+      - chatnet
+
+  db:
+    image: mysql:8.0
+    container_name: chat-mysql
+    environment:
+      - MYSQL_DATABASE=chatdb
+      - MYSQL_USER=chatuser
+      - MYSQL_PASSWORD=chatpass
+      - MYSQL_ROOT_PASSWORD=rootpass
+    volumes:
+      - dbdata:/var/lib/mysql
+      - ./db-init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-prootpass"]
+      interval: 3s
+      timeout: 3s
+      retries: 15
+      start_period: 5s
+    networks:
+      - chatnet
+
+networks:
+  chatnet:
+    driver: bridge
+
+volumes:
+  dbdata:
