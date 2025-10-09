@@ -1,6 +1,3 @@
-# Modified by Muhammad Abdulghaffar & Saime Shaikh
-# Real-time chat app with register/login support for any user.
-
 from flask import Flask, render_template, request
 from flask_socketio import SocketIO, emit, join_room
 from flask_sqlalchemy import SQLAlchemy
@@ -14,6 +11,7 @@ app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DB_URI", "sqlite:///chat.db")
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {"pool_pre_ping": True, "pool_recycle": 280}
+app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", "supersecret")
 
 db = SQLAlchemy(app)
 socketio = SocketIO(app, cors_allowed_origins="*", async_mode="eventlet")
@@ -36,9 +34,13 @@ class Message(db.Model):
 sid_to_user = {}
 
 # -------------------- Routes --------------------
-@app.route('/')
+@app.get("/")
 def home():
-    return render_template('index.html')
+    return render_template("index.html")
+
+@app.get("/healthz")
+def healthz():
+    return "ok", 200
 
 # -------------------- Socket Events --------------------
 @socketio.on("register")
@@ -46,21 +48,14 @@ def register_user(data):
     username = (data or {}).get("username", "").strip().lower()
     password = (data or {}).get("password", "")
     if not username or not password:
-        emit("register_error", {"error": "username & password required"})
-        return
-
+        emit("register_error", {"error": "username & password required"}); return
     if len(username) > 50:
-        emit("register_error", {"error": "username too long"})
-        return
-
+        emit("register_error", {"error": "username too long"}); return
     if User.query.filter_by(username=username).first():
-        emit("register_error", {"error": "username already exists"})
-        return
+        emit("register_error", {"error": "username already exists"}); return
 
-    hashed = generate_password_hash(password)
-    u = User(username=username, password=hashed)
-    db.session.add(u)
-    db.session.commit()
+    u = User(username=username, password=generate_password_hash(password))
+    db.session.add(u); db.session.commit()
 
     sid_to_user[request.sid] = u.id
     join_room(f"user:{u.id}")
@@ -73,13 +68,11 @@ def login_user(data):
     username = (data or {}).get("username", "").strip().lower()
     password = (data or {}).get("password", "")
     if not username or not password:
-        emit("login_error", {"error": "username & password required"})
-        return
+        emit("login_error", {"error": "username & password required"}); return
 
     user = User.query.filter_by(username=username).first()
     if not user or not check_password_hash(user.password, password):
-        emit("login_error", {"error": "invalid username or password"})
-        return
+        emit("login_error", {"error": "invalid username or password"}); return
 
     sid_to_user[request.sid] = user.id
     join_room(f"user:{user.id}")
@@ -91,14 +84,12 @@ def login_user(data):
 def open_dialog(data):
     me_id = sid_to_user.get(request.sid)
     if not me_id:
-        emit("login_error", {"error": "not logged in"})
-        return
+        emit("login_error", {"error": "not logged in"}); return
 
     other_name = (data or {}).get("with", "").strip().lower()
     other = User.query.filter_by(username=other_name).first()
     if not other:
-        emit("dialog_error", {"error": "user not found"})
-        return
+        emit("dialog_error", {"error": "user not found"}); return
 
     msgs = (
         Message.query.filter(
@@ -106,18 +97,13 @@ def open_dialog(data):
                 (Message.sender_id == me_id) & (Message.receiver_id == other.id),
                 (Message.sender_id == other.id) & (Message.receiver_id == me_id),
             )
-        )
-        .order_by(Message.id.asc())
-        .limit(100)
-        .all()
+        ).order_by(Message.id.asc()).limit(100).all()
     )
 
     history = [
-        {
-            "from": ("me" if m.sender_id == me_id else "them"),
-            "text": m.text,
-            "at": m.created_at.isoformat(timespec="seconds"),
-        }
+        {"from": ("me" if m.sender_id == me_id else "them"),
+         "text": m.text,
+         "at": m.created_at.isoformat(timespec="seconds")}
         for m in msgs
     ]
     emit("history", {"with": other.username, "messages": history})
@@ -126,32 +112,27 @@ def open_dialog(data):
 def chat_message(data):
     me_id = sid_to_user.get(request.sid)
     if not me_id:
-        emit("login_error", {"error": "not logged in"})
-        return
+        emit("login_error", {"error": "not logged in"}); return
 
-    text_ = (data or {}).get("text", "").strip()
+    text_ = (data or {}).get("text", "").trim() if isinstance((data or {}).get("text",""), str) else (data or {}).get("text","")
+    if isinstance(text_, str):
+        text_ = text_.strip()
     to_name = (data or {}).get("to", "").strip().lower()
     if not text_ or not to_name:
-        emit("send_error", {"error": "both 'to' and 'text' required"})
-        return
+        emit("send_error", {"error": "both 'to' and 'text' required"}); return
 
     me = User.query.get(me_id)
     you = User.query.filter_by(username=to_name).first()
     if not you:
-        emit("send_error", {"error": "recipient not found"})
-        return
+        emit("send_error", {"error": "recipient not found"}); return
 
     msg = Message(sender_id=me.id, receiver_id=you.id, text=text_)
-    db.session.add(msg)
-    db.session.commit()
+    db.session.add(msg); db.session.commit()
 
     payload = {
-        "from": me.username,
-        "to": you.username,
-        "text": text_,
+        "from": me.username, "to": you.username, "text": text_,
         "at": msg.created_at.isoformat(timespec="seconds"),
     }
-
     socketio.emit("chat_message", payload, room=f"user:{me.id}")
     socketio.emit("chat_message", payload, room=f"user:{you.id}")
 
@@ -161,16 +142,17 @@ def disconnect_user():
 
 def ensure_password_column_only():
     with db.engine.connect() as conn:
-        result = conn.execute(text("SHOW COLUMNS FROM users LIKE 'password';"))
-        exists = result.fetchone() is not None
+        try:
+            result = conn.execute(text("SHOW COLUMNS FROM users LIKE 'password';"))
+            exists = result.fetchone() is not None
+        except Exception:
+            exists = True  # SQLite dev mode doesn't support SHOW COLUMNS
         if not exists:
-            print("🔧 Adding 'password' column to users table...")
             conn.execute(text("ALTER TABLE users ADD COLUMN password VARCHAR(255) NULL;"))
             conn.commit()
-    print("✅ Password column ensured")
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     with app.app_context():
         db.create_all()
         ensure_password_column_only()
-    socketio.run(app, host='0.0.0.0', port=5000)
+    socketio.run(app, host="0.0.0.0", port=5000)
