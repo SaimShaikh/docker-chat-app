@@ -52,22 +52,51 @@
     <p class="small opacity-75">Real-time chat powered by Flask & Socket.IO</p>
   </div>
 
-  <!-- Login -->
-  <div id="loginBox" class="card chat-card shadow-sm mb-4 mx-auto" style="max-width:700px;">
+  <!-- Login/Register -->
+  <div id="authBox" class="card chat-card shadow-sm mb-4 mx-auto" style="max-width:700px;">
     <div class="card-body">
-      <h5 class="mb-3 text-primary">🔐 Login</h5>
-      <div class="row g-2">
-        <div class="col-md-4">
-          <input id="username" class="form-control" placeholder="Username (ahmed / mona / omar)">
+      <ul class="nav nav-tabs mb-3" id="authTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+          <button class="nav-link active" id="login-tab" data-bs-toggle="tab" data-bs-target="#login" type="button">Login</button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link" id="register-tab" data-bs-toggle="tab" data-bs-target="#register" type="button">Register</button>
+        </li>
+      </ul>
+
+      <div class="tab-content">
+        <!-- Login Tab -->
+        <div class="tab-pane fade show active" id="login" role="tabpanel">
+          <div class="row g-2 align-items-end">
+            <div class="col-md-4">
+              <input id="loginUser" class="form-control" placeholder="Username">
+            </div>
+            <div class="col-md-4">
+              <input id="loginPass" class="form-control" type="password" placeholder="Password">
+            </div>
+            <div class="col-md-3">
+              <button id="loginBtn" class="btn btn-primary w-100">Login</button>
+            </div>
+          </div>
+          <div id="loginErr" class="text-danger mt-2 small"></div>
         </div>
-        <div class="col-md-4">
-          <input id="password" class="form-control" type="password" placeholder="Password (123)">
-        </div>
-        <div class="col-md-3">
-          <button id="loginBtn" class="btn btn-primary w-100">Login</button>
+
+        <!-- Register Tab -->
+        <div class="tab-pane fade" id="register" role="tabpanel">
+          <div class="row g-2 align-items-end">
+            <div class="col-md-4">
+              <input id="regUser" class="form-control" placeholder="New username">
+            </div>
+            <div class="col-md-4">
+              <input id="regPass" class="form-control" type="password" placeholder="New password">
+            </div>
+            <div class="col-md-3">
+              <button id="registerBtn" class="btn btn-success w-100">Create</button>
+            </div>
+          </div>
+          <div id="registerErr" class="text-danger mt-2 small"></div>
         </div>
       </div>
-      <div id="loginErr" class="text-danger mt-2 small"></div>
     </div>
   </div>
 
@@ -97,10 +126,11 @@
 </footer>
 
 <!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
 <script>
   const socket = io();
-  const loginBox=document.getElementById("loginBox");
+  const authBox=document.getElementById("authBox");
   const chatUI=document.getElementById("chatUI");
   const meSpan=document.getElementById("me");
   const peerSel=document.getElementById("peer");
@@ -108,10 +138,8 @@
   const box=document.getElementById("messages");
   const msgIn=document.getElementById("msg");
   const sendBtn=document.getElementById("sendBtn");
-  const loginBtn=document.getElementById("loginBtn");
-  const unameIn=document.getElementById("username");
-  const passIn=document.getElementById("password");
   const loginErr=document.getElementById("loginErr");
+  const regErr=document.getElementById("registerErr");
 
   function bubble(text, who="me", meta="") {
     const wrap=document.createElement("div");
@@ -124,16 +152,26 @@
     box.scrollTop=box.scrollHeight;
   }
 
-  loginBtn.onclick=()=>{
-    const username=(unameIn.value||"").trim().toLowerCase();
-    const password=(passIn.value||"");
+  // --- AUTH ---
+  document.getElementById("loginBtn").onclick=()=>{
+    const username=document.getElementById("loginUser").value.trim().toLowerCase();
+    const password=document.getElementById("loginPass").value.trim();
     socket.emit("login",{username,password});
   };
-  passIn.addEventListener("keyup",e=>{if(e.key==="Enter")loginBtn.click();});
+  document.getElementById("registerBtn").onclick=()=>{
+    const username=document.getElementById("regUser").value.trim().toLowerCase();
+    const password=document.getElementById("regPass").value.trim();
+    socket.emit("register",{username,password});
+  };
 
-  socket.on("login_ok",({me,others})=>{
-    loginErr.textContent="";
-    loginBox.style.display="none";
+  socket.on("login_ok",({me,others})=>initChat(me,others));
+  socket.on("register_ok",({me,others})=>initChat(me,others));
+
+  socket.on("login_error",({error})=>loginErr.textContent=error||"Login failed");
+  socket.on("register_error",({error})=>regErr.textContent=error||"Registration failed");
+
+  function initChat(me,others){
+    authBox.style.display="none";
     chatUI.style.display="block";
     meSpan.textContent=me;
     peerSel.innerHTML="";
@@ -142,21 +180,24 @@
       opt.value=u; opt.textContent=u;
       peerSel.appendChild(opt);
     });
-    bubble(`Logged in as <b>${me}</b>. Choose someone & click Open dialog.`,"them");
-  });
-  socket.on("login_error",({error})=>{loginErr.textContent=error||"Login failed";});
+    bubble(`Welcome <b>${me}</b>! Choose someone to start chatting.`,"them");
+  }
+
+  // --- Chat ---
   openBtn.onclick=()=>{
     const who=peerSel.value;
+    if(!who) return;
     box.innerHTML="";
     socket.emit("open_dialog",{with:who});
   };
+
   socket.on("history",({with:withUser,messages})=>{
     bubble(`Chat with <b>${withUser}</b> — last ${messages.length} messages:`,"them");
     messages.forEach(m=>{
-      const who=(m.from==="me")?"me":"them";
-      bubble(m.text,who,m.at);
+      bubble(m.text, m.from==="me"?"me":"them", m.at);
     });
   });
+
   sendBtn.onclick=()=>{
     const text=msgIn.value.trim();
     if(!text)return;
@@ -165,6 +206,7 @@
     msgIn.value="";
   };
   msgIn.addEventListener("keyup",e=>{if(e.key==="Enter")sendBtn.click();});
+
   socket.on("chat_message",({from,to,text,at})=>{
     const who=(from===meSpan.textContent)?"me":"them";
     bubble(text,who,`${from} • ${at}`);
