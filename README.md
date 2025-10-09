@@ -22,5 +22,11 @@ sudo apt install docker-ce docker-ce-cli containerd.io docker-buildx-plugin dock
 docker compose version 
 git clone <repo url>
 cd <project folder name>
-
 ```
+
+* To run Docker Project use this 
+``docker-compose up -d --build``
+* To Stop Docker Project use this
+``docker-compose down ``
+
+---
