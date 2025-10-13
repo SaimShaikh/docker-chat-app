@@ -66,7 +66,9 @@ SHOW CREATE TABLE messages\G
 
 * Output:
 > Register first 
-<img width="3341" height="1837" alt="image" src="https://github.com/user-attachments/assets/5a12f763-2b7e-42e8-9800-358633ef8eb2" />
+<img width="3307" height="2031" alt="image" src="https://github.com/user-attachments/assets/e27cfa8b-d772-48e2-a584-336ffb603926" />
+
  
-<img width="3314" height="1690" alt="image" src="https://github.com/user-attachments/assets/607dfed9-fe59-4b3e-992b-7f8a1509fedc" />
+<img width="3333" height="1910" alt="image" src="https://github.com/user-attachments/assets/c2cf9fc7-a04c-43eb-8bcb-0278ebc8b8a5" />
+
 
