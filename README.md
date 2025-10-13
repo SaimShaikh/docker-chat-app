@@ -41,10 +41,12 @@ cd <project folder name>
   ``docker volume ls``
 ---
 
-* If you don’t known password use this
-  ``docker exec chat-mysql <your db container name> printenv | grep MYSQL``
 * To check Dataases in docker mysql
-  ``docker exec -it chat-mysql <your db container name> bash``
+  ``docker exec -it chat-mysql ``
+* Access the database
+* ``mysql -u root -p``
+* * If you don’t known password use this
+  ``docker exec chat-mysql printenv | grep MYSQL``
 > # login as root # enter: rootpass
 
 <img width="3338" height="1107" alt="image" src="https://github.com/user-attachments/assets/329730f1-c6e1-4578-9731-ac9c63191f2d" />
